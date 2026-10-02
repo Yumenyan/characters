@@ -117,7 +117,7 @@ dialog::backdrop{background:rgba(24,14,40,.6);backdrop-filter:blur(6px)}
   display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);max-height:92vh;animation:rise .3s;
 }
 @media(max-width:760px){.modal{grid-template-columns:1fr;overflow-y:auto}.m-r{max-height:none;overflow:visible}}
-.m-l{position:relative;background:linear-gradient(165deg,color-mix(in srgb,var(--c) 30%,#fff),color-mix(in srgb,var(--c) 75%,#fff));padding:26px;display:flex;flex-direction:column;gap:16px;justify-content:center;align-items:center}
+.m-l{position:relative;background:var(--c);background:linear-gradient(165deg,color-mix(in srgb,var(--c) 30%,#fff),color-mix(in srgb,var(--c) 75%,#fff));padding:26px;display:flex;flex-direction:column;gap:16px;justify-content:center;align-items:center}
 .m-l::before{content:"";position:absolute;width:130%;aspect-ratio:1;border:36px solid rgba(255,255,255,.28);border-radius:50%;left:-45%;bottom:-60%}
 .m-img{position:relative;width:100%;max-width:340px;aspect-ratio:3/4;border-radius:18px;background:rgba(255,255,255,.55);overflow:hidden;display:grid;place-items:center;box-shadow:0 14px 34px rgba(20,10,40,.22)}
 .m-img img{width:100%;height:100%;object-fit:cover;object-position:top}
@@ -151,10 +151,13 @@ dialog::backdrop{background:rgba(24,14,40,.6);backdrop-filter:blur(6px)}
 .stats{display:grid;grid-template-columns:230px 1fr;gap:18px;align-items:center}
 @media(max-width:620px){.stats{grid-template-columns:1fr}}
 .bars{display:grid;gap:11px}
-.bar-r{display:grid;grid-template-columns:72px 1fr 62px;gap:10px;align-items:center;font-size:15px;font-weight:700}
+.bar-r{display:grid;grid-template-columns:72px 1fr 74px;gap:10px;align-items:center;font-size:15px;font-weight:700}
 .bar-r .t{height:10px;border-radius:99px;background:#eee8f3;overflow:hidden}
-.bar-r .t i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,color-mix(in srgb,var(--c) 60%,#fff),var(--c));transition:width .7s cubic-bezier(.2,.9,.3,1);width:0}
-.bar-r em{font-style:normal;font-family:var(--font-en);font-weight:600;text-align:right;font-size:16px}
+.bar-r .t i{display:block;height:100%;border-radius:99px;background:var(--c);background:linear-gradient(90deg,color-mix(in srgb,var(--c) 60%,#fff),var(--c));transition:width .7s cubic-bezier(.2,.9,.3,1);width:0}
+.bar-r em{font-style:normal;font-family:var(--font-en);font-weight:600;text-align:right;font-size:16px;justify-self:end;padding:1px 8px;border-radius:7px}
+.bar-r em.t1{background:#111;color:#ff3b3b}
+.bar-r em.t2{background:#7b2cbf;color:#fff}
+.bar-r em.t3{background:#111;color:#ffd24a;text-shadow:0 0 8px rgba(255,210,74,.55)}
 footer{text-align:center;font-family:var(--font-en);font-size:14px;letter-spacing:.2em;padding:0 0 44px;color:var(--muted)}
 </style>
 </head>
@@ -214,8 +217,8 @@ const STATS = [["hp","体力"],["power","パワー"],["guard","ガード"],["com
 const DEMO = {};
 
 const $ = s => document.querySelector(s);
-const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const num = v => { const n = parseFloat(String(v ?? "").replace(/,/g,"")); return isNaN(n) ? null : n; };
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const num = v => { const n = parseFloat(String(v == null ? "" : v).replace(/,/g,"")); return isNaN(n) ? null : n; };
 const fmt = v => { const n = num(v); return n === null ? "—" : Math.round(n).toLocaleString(); };
 const fmt1 = v => { const n = num(v); return n === null ? "—" : n.toLocaleString(undefined,{maximumFractionDigits:1}); };
 const genLabel = g => { g = String(g||""); return /^\d+$/.test(g) ? g+"期" : g; };
@@ -232,6 +235,8 @@ const imgTag = (m,alt) => m.image
   : `<span class="ini">${esc(inits(m.name))}</span>`;
 
 let ALL = [], view = [];
+function tier(v, t){ v = num(v); if(v === null) return ""; return v>=t[2] ? "t3" : v>=t[1] ? "t2" : v>=t[0] ? "t1" : ""; }
+const T_STAT = [10000,15000,22000], T_IQ = [135,165,215], IQ_MAX = 135;
 
 /* ---- データ取得 ---- */
 const CACHE_KEY = "se_chars_v1";
@@ -241,6 +246,28 @@ function setData(data){
   ALL = (data.members||[]).filter(m => m.name).map(m => ({...m, image: imgUrl(m.image)}));
   buildFilters(); apply();
 }
+function fetchJson(){
+  // 1) 通常のfetch(10秒でタイムアウト)  2) だめならJSONP(古いiPad/Safari対策)
+  return new Promise((resolve, reject) => {
+    let done = false;
+    const ok = t => { if(!done){ done = true; resolve(t); } };
+    const ng = e => { if(!done){ done = true; reject(e); } };
+    const jsonp = () => {
+      const cb = "__se" + Date.now(), sc = document.createElement("script");
+      const t = setTimeout(() => { cleanup(); ng(new Error("timeout")); }, 25000);
+      function cleanup(){ clearTimeout(t); try{ delete window[cb]; }catch(e){ window[cb] = undefined; } if(sc.parentNode) sc.parentNode.removeChild(sc); }
+      window[cb] = d => { cleanup(); ok(JSON.stringify(d)); };
+      sc.onerror = () => { cleanup(); ng(new Error("jsonp")); };
+      sc.src = API_URL + (API_URL.indexOf("?")<0 ? "?" : "&") + "callback=" + cb;
+      document.head.appendChild(sc);
+    };
+    if(typeof fetch !== "function"){ jsonp(); return; }
+    const ctl = typeof AbortController === "function" ? new AbortController() : null;
+    const t = setTimeout(() => { if(ctl) ctl.abort(); jsonp(); }, 8000);
+    fetch(API_URL, ctl ? {signal: ctl.signal} : {}).then(r => { if(!r.ok) throw new Error(r.status); return r.text(); })
+      .then(x => { clearTimeout(t); ok(x); }).catch(() => { clearTimeout(t); jsonp(); });
+  });
+}
 async function load(){
   if(!API_URL){ showStatus("デモデータを表示中です。index.html の API_URL に GAS のURLを設定すると本物のデータになります。"); setData(DEMO); return; }
   const cached = readCache();
@@ -248,12 +275,11 @@ async function load(){
   if(cached){ try{ setData(JSON.parse(cached)); shown = cached; }catch(e){} }
   if(!shown) $("#grid").innerHTML = '<div class="loader" style="grid-column:1/-1"><i></i><i></i><i></i></div>';
   try{
-    const r = await fetch(API_URL); if(!r.ok) throw new Error(r.status);
-    const raw = await r.text(); const data = JSON.parse(raw);
+    const raw = await fetchJson(); const data = JSON.parse(raw);
     if(raw !== shown){ setData(data); writeCache(raw); }
   }catch(e){
     console.error(e);
-    if(!shown) $("#grid").innerHTML = '<div class="empty">データを読み込めませんでした<br><small style="font-size:15px;font-weight:500">API_URLとGASの公開設定(全員アクセス可)を確認してください</small></div>';
+    if(!shown) $("#grid").innerHTML = '<div class="empty">データを読み込めませんでした<br><small style="font-size:15px;font-weight:500">通信状況を確認して、ページを再読み込みしてください</small></div>';
   }
 }
 function showStatus(t){ const s=$("#status"); s.hidden=false; s.textContent=t; }
@@ -277,10 +303,11 @@ function apply(){
     (!g || m.gen===g) && (!a || m.admin===a) &&
     (!q || [m.name,m.yomi,m.gen,m.admin,m.origin,m.likes,m.dislikes,m.intro].join("").toLowerCase().replace(/[\s\u3000]+/g,"").includes(q))
   );
-  const n = k => m => num(m[k]) ?? -Infinity;
+  const nz = (v,d) => v === null ? d : v;
+  const n = k => m => nz(num(m[k]), -Infinity);
   const cmp = {
-    no:(x,y)=>(num(x.no)??1e9)-(num(y.no)??1e9),
-    new:(x,y)=>(num(y.no)??-1)-(num(x.no)??-1),
+    no:(x,y)=>nz(num(x.no),1e9)-nz(num(y.no),1e9),
+    new:(x,y)=>nz(num(y.no),-1)-nz(num(x.no),-1),
     yomi:(x,y)=>String(x.yomi).localeCompare(String(y.yomi),"ja"),
   };
   ["score","power","hp","guard","comm","study","iq"].forEach(k=>cmp[k]=(x,y)=>n(k)(y)-n(k)(x));
@@ -321,7 +348,7 @@ function radar(m){
 /* ---- プロフィールモーダル ---- */
 function open(i){
   const m = view[i], c = groupColor(m.admin);
-  const bars = STATS.map(([k,l])=>{const v=num(m[k]);return `<div class="bar-r"><span>${l}</span><div class="t"><i data-w="${v===null?0:Math.min(100,v/STAT_CAP*100)}"></i></div><em>${fmt(v)}</em></div>`}).join("");
+  const bars = STATS.map(([k,l])=>{const v=num(m[k]);return `<div class="bar-r"><span>${l}</span><div class="t"><i data-w="${v===null?0:Math.min(100,v/STAT_CAP*100)}"></i></div><em class="${tier(v,T_STAT)}">${fmt(v)}</em></div>`}).join("");
   const birth = [m.birthYear,m.birthday].filter(Boolean).join(" ") || "—";
   $("#modal").innerHTML = `<div class="modal" style="--c:${c}" onclick="event.stopPropagation()">
     <button class="x" aria-label="閉じる" onclick="dlg.close()">✕</button>
@@ -342,13 +369,14 @@ function open(i){
         <div class="bubble b"><i>嫌いなもの</i>${esc(m.dislikes)||"—"}</div></div></div>
       <div class="sec"><h3>INTRODUCTION</h3><div class="intro">${esc(m.intro)||"紹介文は準備中です。"}</div></div>
       <div class="sec"><h3>STATUS</h3><div class="stats">${radar(m)}<div class="bars">${bars}
-        <div class="bar-r"><span>IQ</span><div class="t"><i data-w="${Math.min(100,(num(m.iq)||0)/200*100)}"></i></div><em>${fmt(m.iq)}</em></div></div></div></div>
+        <div class="bar-r"><span>IQ</span><div class="t"><i data-w="${Math.min(100,(num(m.iq)||0)/IQ_MAX*100)}"></i></div><em class="${tier(m.iq,T_IQ)}">${fmt(m.iq)}</em></div></div></div></div>
     </div></div>`;
   dlg.showModal();
   requestAnimationFrame(()=>requestAnimationFrame(()=>document.querySelectorAll(".bar-r .t i").forEach(e=>e.style.width=e.dataset.w+"%")));
 }
 
 const dlg = $("#dlg");
+if(!dlg.showModal){ dlg.showModal = function(){ dlg.setAttribute("open",""); dlg.style.cssText="position:fixed;inset:0;margin:auto;z-index:99;display:flex;align-items:center;justify-content:center;background:rgba(24,14,40,.6);max-width:none;width:100%;height:100%"; document.body.style.overflow="hidden"; }; dlg.close = function(){ dlg.removeAttribute("open"); dlg.style.cssText=""; document.body.style.overflow=""; }; }
 dlg.addEventListener("click", e=>{ if(e.target===dlg) dlg.close(); });
 $("#grid").addEventListener("click", e=>{ const c=e.target.closest(".card"); if(c) open(+c.dataset.i); });
 $("#chips").addEventListener("click", e=>{ const b=e.target.closest(".tab"); if(b){ $("#fAdmin").value=b.dataset.a; apply(); } });
