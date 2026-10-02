@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SE CHARACTERS</title>
+<link rel="preconnect" href="https://script.google.com">
+<link rel="preconnect" href="https://raw.githubusercontent.com">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+
+
+<style>
+:root{
+  --ink:#1f1a2b; --muted:#6b6478; --line:#e7e1ee; --bg:#faf8fc; --white:#fff;
+  --accent:#ce8fe8; --accent-d:#9b4fc4; --gray:#555;
+  --font-en:"Jost","Noto Sans JP",sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; font-family:"Noto Sans JP",sans-serif; font-size:16px; color:var(--ink); background:var(--bg); min-height:100vh;
+  line-height:1.6; -webkit-font-smoothing:antialiased;
+}
+body::before{ /* 背景のうっすらしたグラデ */
+  content:""; position:fixed; inset:0; z-index:-1; pointer-events:none;
+  background:
+    radial-gradient(900px 500px at 85% -5%, rgba(206,143,232,.22), transparent 70%),
+    radial-gradient(700px 500px at -5% 35%, rgba(120,170,255,.14), transparent 70%),
+    radial-gradient(800px 500px at 60% 110%, rgba(206,143,232,.14), transparent 70%);
+}
+
+/* ---------- HERO (ロゴ) ---------- */
+.hero{position:relative;text-align:center;padding:56px 16px 40px;overflow:hidden}
+.hero::before,.hero::after{
+  content:"";position:absolute;width:160%;height:2px;left:-30%;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:.5;
+}
+.hero::before{top:26px;transform:rotate(-2deg)}
+.hero::after{bottom:14px;transform:rotate(-2deg)}
+.logo{display:inline-flex;flex-direction:column;align-items:center;gap:18px;animation:rise .8s both}
+.logo svg{width:clamp(150px,26vw,230px);height:auto;display:block}
+.logo .word{
+  font-family:var(--font-en);font-weight:400;font-size:clamp(22px,4.6vw,38px);letter-spacing:.3em;margin-right:-.3em;color:#000;line-height:1;
+}
+@keyframes rise{from{opacity:0;transform:translateY(16px)}}
+
+/* ---------- 操作バー ---------- */
+.bar{
+  position:sticky;top:0;z-index:20;background:rgba(255,255,255,.88);backdrop-filter:blur(12px);
+  border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+}
+.bar-in{max-width:1200px;margin:0 auto;padding:14px 20px;display:grid;gap:12px;grid-template-columns:minmax(0,2.2fr) repeat(3,minmax(0,1fr))}
+@media(max-width:820px){.bar-in{grid-template-columns:1fr 1fr}.bar .search{grid-column:1/-1}}
+.f label{display:block;font-family:var(--font-en);font-size:13px;font-weight:600;letter-spacing:.14em;color:var(--accent-d);margin-bottom:4px}
+.f input,.f select{
+  width:100%;height:50px;padding:0 14px;border:1.5px solid var(--line);border-radius:12px;background:#fff;font:inherit;font-size:16px;font-weight:500;color:var(--ink);
+  transition:.15s;appearance:none;-webkit-appearance:none;
+}
+.f select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23555' stroke-width='2'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
+.f input:focus,.f select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 4px rgba(206,143,232,.25)}
+.tabs{max-width:1200px;margin:0 auto;padding:0 20px;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+.tab{
+  position:relative;border:0;background:none;font:inherit;font-family:var(--font-en),"Noto Sans JP";font-weight:600;font-size:16px;letter-spacing:.06em;color:var(--muted);
+  padding:10px 18px 12px;cursor:pointer;white-space:nowrap;transition:.15s
+}
+.tab:hover{color:var(--ink)}
+.tab.on{color:var(--ink)}
+.tab.on::after{content:"";position:absolute;left:12px;right:12px;bottom:0;height:3px;border-radius:3px;background:linear-gradient(90deg,var(--accent),var(--accent-d))}
+
+/* ---------- 一覧 ---------- */
+.list-head{max-width:1200px;margin:34px auto 6px;padding:0 20px;display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.list-head h2{margin:0;font-family:var(--font-en);font-weight:600;font-size:clamp(28px,4.4vw,40px);letter-spacing:.08em;line-height:1}
+.list-head h2 small{display:block;margin-top:8px;font-family:"Noto Sans JP";font-size:15px;font-weight:700;letter-spacing:.1em;color:var(--accent-d)}
+.count{font-weight:500;color:var(--muted);font-size:16px}
+.count em{font-style:normal;font-family:var(--font-en);font-weight:700;font-size:30px;color:var(--ink);margin-right:4px}
+
+.grid{max-width:1200px;margin:18px auto 80px;padding:0 20px;display:grid;gap:26px 22px;grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}
+@media(max-width:520px){.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 12px;padding:0 14px}}
+.card{
+  --c:var(--accent); display:block;width:100%;text-align:left;padding:0;font:inherit;color:inherit;cursor:pointer;
+  background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden;position:relative;
+  box-shadow:0 2px 10px rgba(60,30,90,.05);transition:transform .25s cubic-bezier(.2,.8,.2,1),box-shadow .25s;animation:rise .5s backwards;
+}
+.card::after{content:"";position:absolute;left:0;right:0;bottom:0;height:5px;background:var(--c)}
+.card:hover{transform:translateY(-6px);box-shadow:0 18px 36px rgba(60,30,90,.16)}
+.card:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.ph{position:relative;aspect-ratio:3/4;overflow:hidden;background:linear-gradient(160deg,color-mix(in srgb,var(--c) 22%,#fff),color-mix(in srgb,var(--c) 55%,#fff));display:grid;place-items:center}
+.ph img{width:100%;height:100%;object-fit:cover;object-position:top;transition:transform .5s}
+.card:hover .ph img{transform:scale(1.06)}
+.ph .ini{font-family:var(--font-en),"Noto Sans JP";font-weight:700;font-size:84px;color:#fff;text-shadow:0 4px 18px rgba(0,0,0,.18)}
+.ph::after{content:"";position:absolute;inset:auto 0 0 0;height:38%;background:linear-gradient(transparent,rgba(20,10,35,.28));pointer-events:none}
+.no{position:absolute;top:10px;left:10px;z-index:2;background:rgba(255,255,255,.92);border-radius:8px;padding:2px 10px;font-family:var(--font-en);font-weight:600;font-size:14px;letter-spacing:.06em}
+.gen{position:absolute;top:10px;right:10px;z-index:2;background:var(--ink);color:#fff;border-radius:8px;padding:2px 10px;font-weight:700;font-size:13px}
+.info{padding:14px 16px 20px}
+.grp{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:700;color:var(--muted);letter-spacing:.04em}
+.grp i{width:9px;height:9px;border-radius:50%;background:var(--c)}
+.nm{margin-top:4px;font-weight:900;font-size:20px;line-height:1.3}
+.yomi{font-size:13.5px;color:var(--muted);font-weight:500;margin-top:1px}
+.sc{margin-top:12px;padding-top:10px;border-top:1px dashed var(--line);display:flex;align-items:baseline;justify-content:space-between}
+.sc span{font-family:var(--font-en);font-weight:600;font-size:13px;letter-spacing:.14em;color:var(--muted)}
+.sc b{font-family:var(--font-en);font-weight:700;font-size:22px}
+@media(max-width:520px){.nm{font-size:17px}.info{padding:12px 12px 18px}.ph .ini{font-size:64px}}
+
+.empty{grid-column:1/-1;text-align:center;padding:70px 0;font-weight:700;font-size:20px;color:var(--muted)}
+.status{max-width:760px;margin:14px auto;padding:12px 18px;border:1.5px dashed var(--accent);border-radius:14px;background:#fff;text-align:center;font-size:15px}
+.loader{display:flex;gap:10px;justify-content:center;padding:80px 0}
+.loader i{width:14px;height:14px;border-radius:50%;background:var(--accent);animation:bn .7s infinite alternate}
+.loader i:nth-child(2){animation-delay:.12s;background:var(--gray)}.loader i:nth-child(3){animation-delay:.24s}
+@keyframes bn{to{transform:translateY(-16px);opacity:.5}}
+
+/* ---------- モーダル ---------- */
+dialog{border:none;padding:0;background:transparent;max-width:min(980px,94vw);max-height:none;width:100%;overflow:visible}
+dialog::backdrop{background:rgba(24,14,40,.6);backdrop-filter:blur(6px)}
+.modal{
+  --c:var(--accent);position:relative;background:#fff;border-radius:24px;overflow:hidden;box-shadow:0 30px 80px rgba(20,10,40,.4);
+  display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);max-height:92vh;animation:rise .3s;
+}
+@media(max-width:760px){.modal{grid-template-columns:1fr;overflow-y:auto}.m-r{max-height:none;overflow:visible}}
+.m-l{position:relative;background:linear-gradient(165deg,color-mix(in srgb,var(--c) 30%,#fff),color-mix(in srgb,var(--c) 75%,#fff));padding:26px;display:flex;flex-direction:column;gap:16px;justify-content:center;align-items:center}
+.m-l::before{content:"";position:absolute;width:130%;aspect-ratio:1;border:36px solid rgba(255,255,255,.28);border-radius:50%;left:-45%;bottom:-60%}
+.m-img{position:relative;width:100%;max-width:340px;aspect-ratio:3/4;border-radius:18px;background:rgba(255,255,255,.55);overflow:hidden;display:grid;place-items:center;box-shadow:0 14px 34px rgba(20,10,40,.22)}
+.m-img img{width:100%;height:100%;object-fit:cover;object-position:top}
+.m-img .ini{font-family:var(--font-en),"Noto Sans JP";font-weight:700;font-size:110px;color:#fff;text-shadow:0 4px 18px rgba(0,0,0,.2)}
+.m-score{position:relative;background:#fff;border-radius:14px;padding:8px 26px;text-align:center;box-shadow:0 6px 18px rgba(20,10,40,.15)}
+.m-score span{display:block;font-family:var(--font-en);font-weight:600;font-size:13px;letter-spacing:.16em;color:var(--muted)}
+.m-score b{font-family:var(--font-en);font-weight:700;font-size:30px;line-height:1.1}
+.m-r{padding:30px 32px 40px;overflow-y:auto;max-height:92vh;min-height:0}
+@media(max-width:520px){.m-r{padding:22px 18px 26px}}
+.m-r .no2{font-family:var(--font-en);font-weight:600;font-size:15px;letter-spacing:.1em;color:var(--accent-d)}
+.m-r h2{margin:2px 0 0;font-size:32px;line-height:1.25;font-weight:900}
+.m-r .yomi{font-size:15px;margin:2px 0 10px}
+.badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.badge{border-radius:999px;padding:4px 14px;font-size:14px;font-weight:700;background:var(--c);color:#fff}
+.badge.l{background:#f1ecf6;color:var(--ink)}
+.x{position:absolute;right:14px;top:14px;z-index:5;width:44px;height:44px;border-radius:50%;border:0;background:#fff;box-shadow:0 4px 14px rgba(20,10,40,.2);font-size:18px;cursor:pointer;color:var(--ink);transition:.15s}
+.x:hover{background:var(--ink);color:#fff}
+.sec{margin-top:26px}
+.sec h3{margin:0 0 10px;font-family:var(--font-en);font-weight:600;font-size:16px;letter-spacing:.2em;display:flex;align-items:center;gap:12px}
+.sec h3::after{content:"";flex:1;height:1px;background:var(--line)}
+.sec h3::before{content:"";width:14px;height:14px;border-radius:50%;border:4px solid var(--c)}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.kv div{background:var(--bg);border-radius:12px;padding:10px 14px;font-weight:700;font-size:16px}
+.kv span{display:block;font-size:12.5px;color:var(--muted);font-weight:500;letter-spacing:.04em}
+.likes{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:560px){.likes{grid-template-columns:1fr}}
+.bubble{border-radius:14px;padding:12px 16px;font-weight:500;font-size:16px;background:#f4fbf8;min-height:64px;white-space:pre-wrap;border-left:5px solid #3ec9a0}
+.bubble.b{background:#f6f3fc;border-left-color:var(--accent-d)}
+.bubble i{display:block;font-style:normal;font-size:13px;font-weight:700;color:var(--muted);letter-spacing:.06em;margin-bottom:2px}
+.intro{border-radius:14px;padding:16px 18px;background:var(--bg);line-height:1.9;white-space:pre-wrap;font-size:16px}
+.stats{display:grid;grid-template-columns:230px 1fr;gap:18px;align-items:center}
+@media(max-width:620px){.stats{grid-template-columns:1fr}}
+.bars{display:grid;gap:11px}
+.bar-r{display:grid;grid-template-columns:72px 1fr 62px;gap:10px;align-items:center;font-size:15px;font-weight:700}
+.bar-r .t{height:10px;border-radius:99px;background:#eee8f3;overflow:hidden}
+.bar-r .t i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,color-mix(in srgb,var(--c) 60%,#fff),var(--c));transition:width .7s cubic-bezier(.2,.9,.3,1);width:0}
+.bar-r em{font-style:normal;font-family:var(--font-en);font-weight:600;text-align:right;font-size:16px}
+footer{text-align:center;font-family:var(--font-en);font-size:14px;letter-spacing:.2em;padding:0 0 44px;color:var(--muted)}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="logo">
+    <svg viewBox="360 310 1220 1230" overflow="visible" role="img" aria-label="SE CHARACTERS"><path d="M1442.5 1074.4 A505 505 0 1 1 1049.2 412" fill="none" stroke="#ce8fe8" stroke-width="96"/><circle cx="1283" cy="737" r="204" fill="none" stroke="#555" stroke-width="96"/></svg>
+    <div class="word">SE CHARACTERS</div>
+  </div>
+</header>
+
+<section class="bar">
+  <div class="bar-in">
+    <div class="f search"><label>SEARCH</label><input id="q" type="search" placeholder="" aria-label="検索"></div>
+    <div class="f"><label>GENERATION</label><select id="fGen" aria-label="期"></select></div>
+    <div class="f"><label>GROUP</label><select id="fAdmin" aria-label="所属"></select></div>
+    <div class="f"><label>SORT</label>
+      <select id="sort" aria-label="並び替え">
+        <option value="no">番号順</option>
+        <option value="new">新しい順</option>
+        <option value="score">評価値 高い順</option>
+        <option value="power">パワー 高い順</option>
+        <option value="hp">体力 高い順</option>
+        <option value="guard">ガード 高い順</option>
+        <option value="comm">コミュ力 高い順</option>
+        <option value="study">学力 高い順</option>
+        <option value="iq">IQ 高い順</option>
+        <option value="yomi">よみ あいうえお順</option>
+      </select></div>
+  </div>
+  <nav class="tabs" id="chips"></nav>
+</section>
+
+<div class="list-head">
+  <h2>CHARACTER LIST<small>キャラクター一覧</small></h2>
+  <div class="count" id="count"></div>
+</div>
+<div id="status" class="status" hidden></div>
+<main class="grid" id="grid"></main>
+<footer>© SE CHARACTERS</footer>
+
+<dialog id="dlg"><div id="modal"></div></dialog>
+
+<script>
+/* ============ 設定 ============ */
+// GASをウェブアプリとしてデプロイして発行されたURLを貼ってください。空のままだとデモデータで動きます。
+const API_URL = "https://script.google.com/macros/s/AKfycby4iRMltkqTU77u4-2dcAEEopAIx1USWHjIlxi4bl--5SclgHkvsjbSxFc6KekUVfRJ/exec";
+// 能力バー・レーダーの満点値(これ以上は満タン表示。数値自体は実値を表示)
+const STAT_CAP = 10000;
+/* ============================== */
+
+const GROUP_COLORS = {"風神":"#e0559f","松電":"#2a9df4","白鉄":"#f0a500"};
+const FALLBACK = ["#9b4fc4","#2fb98f","#ef7a52","#5b7cf0"];
+const STATS = [["hp","体力"],["power","パワー"],["guard","ガード"],["comm","コミュ力"],["study","学力"]];
+
+const DEMO = {};
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const num = v => { const n = parseFloat(String(v ?? "").replace(/,/g,"")); return isNaN(n) ? null : n; };
+const fmt = v => { const n = num(v); return n === null ? "—" : Math.round(n).toLocaleString(); };
+const fmt1 = v => { const n = num(v); return n === null ? "—" : n.toLocaleString(undefined,{maximumFractionDigits:1}); };
+const genLabel = g => { g = String(g||""); return /^\d+$/.test(g) ? g+"期" : g; };
+function groupColor(a){ if(GROUP_COLORS[a]) return GROUP_COLORS[a]; let h=0; for(const ch of String(a||"")) h=(h*31+ch.charCodeAt(0))>>>0; return FALLBACK[h%FALLBACK.length]; }
+function imgUrl(u){ // GitHubのblob URLをraw URLに自動変換
+  u = String(u||"").trim(); if(!u) return "";
+  const m = u.match(/^https?:\/\/github\.com\/([^/]+)\/([^/]+)\/blob\/(.+)$/);
+  return m ? `https://raw.githubusercontent.com/${m[1]}/${m[2]}/${m[3]}` : u;
+}
+function debutStr(d){ const m=String(d||"").match(/^(\d{2})\/(\d{1,2})\/(\d{1,2})$/); return m ? `20${m[1]}.${m[2].padStart(2,"0")}.${m[3].padStart(2,"0")}` : (d||"—"); }
+function inits(n){ return String(n||"?").trim().split(/[\s\u3000]+/).pop().charAt(0); }
+const imgTag = (m,alt) => m.image
+  ? `<img loading="lazy" src="${esc(m.image)}" alt="${esc(alt)}" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'ini',textContent:'${esc(inits(m.name))}'}))">`
+  : `<span class="ini">${esc(inits(m.name))}</span>`;
+
+let ALL = [], view = [];
+
+/* ---- データ取得 ---- */
+const CACHE_KEY = "se_chars_v1";
+const readCache = () => { try{ return localStorage.getItem(CACHE_KEY); }catch(e){ return null; } };
+const writeCache = t => { try{ localStorage.setItem(CACHE_KEY, t); }catch(e){} };
+function setData(data){
+  ALL = (data.members||[]).filter(m => m.name).map(m => ({...m, image: imgUrl(m.image)}));
+  buildFilters(); apply();
+}
+async function load(){
+  if(!API_URL){ showStatus("デモデータを表示中です。index.html の API_URL に GAS のURLを設定すると本物のデータになります。"); setData(DEMO); return; }
+  const cached = readCache();
+  let shown = null;
+  if(cached){ try{ setData(JSON.parse(cached)); shown = cached; }catch(e){} }
+  if(!shown) $("#grid").innerHTML = '<div class="loader" style="grid-column:1/-1"><i></i><i></i><i></i></div>';
+  try{
+    const r = await fetch(API_URL); if(!r.ok) throw new Error(r.status);
+    const raw = await r.text(); const data = JSON.parse(raw);
+    if(raw !== shown){ setData(data); writeCache(raw); }
+  }catch(e){
+    console.error(e);
+    if(!shown) $("#grid").innerHTML = '<div class="empty">データを読み込めませんでした<br><small style="font-size:15px;font-weight:500">API_URLとGASの公開設定(全員アクセス可)を確認してください</small></div>';
+  }
+}
+function showStatus(t){ const s=$("#status"); s.hidden=false; s.textContent=t; }
+
+function buildFilters(){
+  const pg=$("#fGen").value, pa=$("#fAdmin").value;
+  const gens = [...new Set(ALL.map(m=>m.gen).filter(Boolean))];
+  gens.sort((a,b)=>(parseInt(a)||9999)-(parseInt(b)||9999));
+  $("#fGen").innerHTML = '<option value="">すべて</option>' + gens.map(g=>`<option>${esc(g)}</option>`).join("");
+  const adm = [...new Set(ALL.map(m=>m.admin).filter(Boolean))];
+  $("#fAdmin").innerHTML = '<option value="">すべて</option>' + adm.map(a=>`<option>${esc(a)}</option>`).join("");
+  $("#fGen").value = gens.includes(pg)?pg:""; $("#fAdmin").value = adm.includes(pa)?pa:"";
+  $("#chips").innerHTML = '<button class="tab on" data-a="">ALL</button>' + adm.map(a=>`<button class="tab" data-a="${esc(a)}">${esc(a)}</button>`).join("");
+}
+
+/* ---- 絞り込み・並び替え ---- */
+function apply(){
+  const q = $("#q").value.trim().toLowerCase().replace(/[\s\u3000]+/g,"");
+  const g = $("#fGen").value, a = $("#fAdmin").value, s = $("#sort").value;
+  view = ALL.filter(m =>
+    (!g || m.gen===g) && (!a || m.admin===a) &&
+    (!q || [m.name,m.yomi,m.gen,m.admin,m.origin,m.likes,m.dislikes,m.intro].join("").toLowerCase().replace(/[\s\u3000]+/g,"").includes(q))
+  );
+  const n = k => m => num(m[k]) ?? -Infinity;
+  const cmp = {
+    no:(x,y)=>(num(x.no)??1e9)-(num(y.no)??1e9),
+    new:(x,y)=>(num(y.no)??-1)-(num(x.no)??-1),
+    yomi:(x,y)=>String(x.yomi).localeCompare(String(y.yomi),"ja"),
+  };
+  ["score","power","hp","guard","comm","study","iq"].forEach(k=>cmp[k]=(x,y)=>n(k)(y)-n(k)(x));
+  view.sort(cmp[s]);
+  document.querySelectorAll(".tab").forEach(c=>c.classList.toggle("on", c.dataset.a===a));
+  render();
+}
+
+function render(){
+  $("#count").innerHTML = `<em>${view.length}</em>人のキャラクター`;
+  if(!view.length){ $("#grid").innerHTML = '<div class="empty">該当するキャラクターが見つかりませんでした</div>'; return; }
+  $("#grid").innerHTML = view.map((m,i)=>{
+    const c = groupColor(m.admin);
+    return `<button class="card" style="--c:${c};animation-delay:${Math.min(i,16)*30}ms" data-i="${i}">
+      <div class="ph"><span class="no">No.${esc(m.no)}</span><span class="gen">${esc(genLabel(m.gen))}</span>${imgTag(m,m.name)}</div>
+      <div class="info">
+        <div class="grp"><i></i>${esc(m.admin||"—")} / ${esc(m.origin||"—")}</div>
+        <div class="nm">${esc(m.name)}</div><div class="yomi">${esc(m.yomi)}</div>
+        <div class="sc"><span>SCORE</span><b>${fmt(m.score)}</b></div>
+      </div>
+    </button>`;
+  }).join("");
+}
+
+/* ---- レーダー ---- */
+function radar(m){
+  const S=250, C=S/2, R=80, n=5, pts=(r)=>STATS.map((_,i)=>{const a=-Math.PI/2+i*2*Math.PI/n;return [C+r*Math.cos(a),C+r*Math.sin(a)]});
+  const poly = p => p.map(x=>x.map(v=>v.toFixed(1)).join(",")).join(" ");
+  const grid = [.25,.5,.75,1].map(k=>`<polygon points="${poly(pts(R*k))}" fill="none" stroke="#c9bfd6" stroke-opacity="${k===1?.9:.5}" stroke-width="1.5"/>`).join("");
+  const val = STATS.map(([k],i)=>{const v=Math.min(1,(num(m[k])||0)/STAT_CAP), a=-Math.PI/2+i*2*Math.PI/n; return [C+R*v*Math.cos(a),C+R*v*Math.sin(a)]});
+  const lab = pts(R+24).map((p,i)=>`<text x="${p[0].toFixed(1)}" y="${(p[1]+5).toFixed(1)}" text-anchor="middle" font-size="14" font-weight="700" fill="#1f1a2b">${STATS[i][1]}</text>`).join("");
+  const axes = pts(R).map(p=>`<line x1="${C}" y1="${C}" x2="${p[0].toFixed(1)}" y2="${p[1].toFixed(1)}" stroke="#c9bfd6" stroke-opacity=".5"/>`).join("");
+  return `<svg viewBox="0 0 ${S} ${S}" width="100%" style="max-width:250px;margin:auto;display:block">${grid}${axes}
+    <polygon points="${poly(val)}" fill="var(--c)" fill-opacity=".35" stroke="var(--c)" stroke-width="3" stroke-linejoin="round"/>
+    ${val.map(p=>`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="4.5" fill="#fff" stroke="var(--c)" stroke-width="3"/>`).join("")}${lab}</svg>`;
+}
+
+/* ---- プロフィールモーダル ---- */
+function open(i){
+  const m = view[i], c = groupColor(m.admin);
+  const bars = STATS.map(([k,l])=>{const v=num(m[k]);return `<div class="bar-r"><span>${l}</span><div class="t"><i data-w="${v===null?0:Math.min(100,v/STAT_CAP*100)}"></i></div><em>${fmt(v)}</em></div>`}).join("");
+  const birth = [m.birthYear,m.birthday].filter(Boolean).join(" ") || "—";
+  $("#modal").innerHTML = `<div class="modal" style="--c:${c}" onclick="event.stopPropagation()">
+    <button class="x" aria-label="閉じる" onclick="dlg.close()">✕</button>
+    <div class="m-l">
+      <div class="m-img">${imgTag(m,m.name)}</div>
+      <div class="m-score"><span>SCORE</span><b>${fmt1(m.score)}</b></div>
+    </div>
+    <div class="m-r">
+      <div class="no2">No.${esc(m.no)}</div>
+      <h2>${esc(m.name)}</h2><div class="yomi">${esc(m.yomi)}</div>
+      <div class="badges"><span class="badge">${esc(m.admin||"—")}</span><span class="badge l">${esc(genLabel(m.gen))}</span><span class="badge l">${esc(m.origin||"—")}</span></div>
+      <div class="sec"><h3>PROFILE</h3><div class="kv">
+        <div><span>誕生日</span>${esc(birth)}</div><div><span>デビュー</span>${esc(debutStr(m.debut))}</div>
+        <div><span>身長</span>${m.height?esc(m.height)+" cm":"—"}</div><div><span>体重</span>${m.weight?esc(m.weight)+" kg":"—"}</div>
+      </div></div>
+      <div class="sec"><h3>FAVORITE</h3><div class="likes">
+        <div class="bubble"><i>好きなもの</i>${esc(m.likes)||"—"}</div>
+        <div class="bubble b"><i>嫌いなもの</i>${esc(m.dislikes)||"—"}</div></div></div>
+      <div class="sec"><h3>INTRODUCTION</h3><div class="intro">${esc(m.intro)||"紹介文は準備中です。"}</div></div>
+      <div class="sec"><h3>STATUS</h3><div class="stats">${radar(m)}<div class="bars">${bars}
+        <div class="bar-r"><span>IQ</span><div class="t"><i data-w="${Math.min(100,(num(m.iq)||0)/200*100)}"></i></div><em>${fmt(m.iq)}</em></div></div></div></div>
+    </div></div>`;
+  dlg.showModal();
+  requestAnimationFrame(()=>requestAnimationFrame(()=>document.querySelectorAll(".bar-r .t i").forEach(e=>e.style.width=e.dataset.w+"%")));
+}
+
+const dlg = $("#dlg");
+dlg.addEventListener("click", e=>{ if(e.target===dlg) dlg.close(); });
+$("#grid").addEventListener("click", e=>{ const c=e.target.closest(".card"); if(c) open(+c.dataset.i); });
+$("#chips").addEventListener("click", e=>{ const b=e.target.closest(".tab"); if(b){ $("#fAdmin").value=b.dataset.a; apply(); } });
+["q","fGen","fAdmin","sort"].forEach(id=>$("#"+id).addEventListener("input", apply));
+load();
+</script>
+</body>
+</html>
