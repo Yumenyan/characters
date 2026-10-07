@@ -675,12 +675,10 @@ function stGroups(by){
   const key = m => { const v = String(by==="gen" ? genLabel(m.gen) : m[by]||"").trim(); return v || "不明"; };
   const cnt = {}; ALL.forEach(m=>{ const k = key(m); cnt[k] = (cnt[k]||0)+1; });
   let names = Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a]);
-  const keep = by==="admin" ? names.length : 8;
-  const top = names.slice(0, keep), rest = new Set(names.slice(keep));
-  const label = m => { const k = key(m); return rest.has(k) ? "その他" : k; };
-  if(rest.size) top.push("その他");
+  const top = names.slice();
+  const label = key;
   if(by==="gen") top.sort((a,b)=>(parseInt(a)||9999)-(parseInt(b)||9999));
-  const color = {}; top.forEach((g,i)=>{ color[g] = by==="admin" && GROUP_COLORS[g] ? GROUP_COLORS[g] : g==="その他" ? "#b7aec2" : PALETTE[i%PALETTE.length]; });
+  const color = {}; top.forEach((g,i)=>{ color[g] = by==="admin" && GROUP_COLORS[g] ? GROUP_COLORS[g] : i<PALETTE.length ? PALETTE[i] : `hsl(${Math.round((i*137.5)%360)},62%,56%)`; });
   return {names: top, label, color};
 }
 const mean = a => a.reduce((x,y)=>x+y,0)/a.length;
@@ -718,7 +716,7 @@ function renderStats(){
   if(!all.length){ $("#stHist").innerHTML = '<div class="bd-none">データがありません</div>'; }
   else{
     const lo = Math.min.apply(null,all), hi = Math.max.apply(null,all);
-    let step = niceStep(hi-lo, 12); if(mk==="birthYear"||mk==="iq") step = Math.max(1, step);
+    let step = niceStep(hi-lo, 12); { const p = Math.pow(10, Math.floor(Math.log10(step))), d = Math.round(step/p); step = d===5 ? step/2.5 : step/2; } if(mk==="birthYear"||mk==="iq") step = Math.max(1, step);
     const start = Math.floor(lo/step)*step, nb = Math.floor((hi-start)/step)+1;
     const bins = []; for(let i=0;i<nb;i++){ const o = {}; G.names.forEach(g=>o[g]=0); o._t=0; bins.push(o); }
     vals(mk).forEach(x=>{ const i = Math.min(nb-1, Math.floor((x.v-start)/step)); bins[i][x.g]++; bins[i]._t++; });
@@ -732,8 +730,8 @@ function renderStats(){
       let y = T+ph; const x = L+i*bw+bw*.12, w = bw*.76, tot = b._t||1;
       G.names.forEach(g=>{ const c = b[g]; if(!c) return; const h = (mode==="p" ? c/tot*100 : c)/ytop*ph;
         svg += `<rect x="${x.toFixed(1)}" y="${(y-h).toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" fill="${G.color[g]}"><title>${esc(g)}: ${c}人 (${b._t?(c/b._t*100).toFixed(0):0}%) / ${f1(start+i*step)}〜${step>=1?f1(start+(i+1)*step-(Number.isInteger(step)?1:0)):f1(start+(i+1)*step)}</title></rect>`; y -= h; });
-      if(b._t && mode!=="p") svg += `<text x="${(x+w/2).toFixed(1)}" y="${(y-4).toFixed(1)}" text-anchor="middle" font-size="12" font-weight="700" fill="#555">${b._t}</text>`;
-      const skip = nb>16 ? 2 : 1;
+      if(b._t && mode!=="p") svg += `<text x="${(x+w/2).toFixed(1)}" y="${(y-4).toFixed(1)}" text-anchor="middle" font-size="${nb>28?10:12}" font-weight="700" fill="#555">${b._t}</text>`;
+      const skip = Math.ceil(nb/16);
       if(i%skip===0) svg += `<text x="${(L+i*bw+bw/2).toFixed(1)}" y="${H-24}" text-anchor="middle" font-size="12" fill="#666">${f1(start+i*step)}</text>`;
     });
     svg += `<text x="${L+pw/2}" y="${H-6}" text-anchor="middle" font-size="12" fill="#888">${esc(M[1])}${unit?" ("+unit+")":""} ※区間の下限値</text></svg>`;
