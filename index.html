@@ -139,6 +139,13 @@ body::before{ /* 背景のうっすらしたグラデ */
 table.tb{border-collapse:collapse;width:100%;font-size:15px;min-width:560px}
 .tb th,.tb td{padding:9px 12px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
 .tb th{font-size:13px;color:var(--muted);font-weight:700;letter-spacing:.04em}
+.tb th.sortable{cursor:pointer;user-select:none}
+.tb th.sortable:hover{color:var(--ink)}
+.tb th.sorted{color:var(--ink)}
+.tb th .ar{display:inline-block;width:1em;color:var(--accent-d)}
+.tb td.txt{font-family:"Noto Sans JP";font-weight:500;text-align:left;white-space:normal;min-width:220px;color:var(--muted);font-size:14px}
+.tb td.ch{font-family:"Noto Sans JP";font-weight:900;font-size:20px;text-align:left}
+.more-btn{display:block;margin:14px auto 0;height:46px;padding:0 26px;border:1.5px solid var(--line);border-radius:12px;background:#fff;font:inherit;font-weight:700;font-size:15px;cursor:pointer;color:var(--ink)}
 .tb th:first-child,.tb td:first-child{text-align:left;font-weight:700;position:sticky;left:0;background:#fff}
 .tb td.mx{background:color-mix(in srgb,var(--accent) 22%,#fff);font-weight:700}
 .tb td{font-family:var(--font-en);font-weight:500}
@@ -324,6 +331,13 @@ footer{text-align:center;font-family:var(--font-en);font-size:14px;letter-spacin
     <div class="st-card"><h3 id="stHistTtl">分布</h3><div id="stHist"></div></div>
     <div class="st-card"><h3 id="stTblTtl">グループ別 統計</h3><div class="st-scroll" id="stTbl"></div></div>
     <div class="st-card"><h3>グループ別 平均一覧<small>(各列の最大値を強調)</small></h3><div class="st-scroll" id="stMatrix"></div></div>
+    <div class="list-head sub" style="padding:0;margin-bottom:12px"><h2>NAME RANKING<small>苗字・文字ランキング</small></h2></div>
+    <div class="st-ctl" style="margin-top:0">
+      <div class="f"><label>TARGET 対象グループ</label><select id="rkScope"></select></div>
+      <div class="f"><label>CHAR TYPE 文字の種類</label><select id="rkKind"><option value="">すべて</option><option value="han">漢字</option><option value="hira">ひらがな</option><option value="kata">カタカナ</option><option value="other">その他の文字</option></select></div>
+    </div>
+    <div class="st-card"><h3 id="rkSurTtl">苗字ランキング</h3><div class="st-scroll" id="rkSur"></div></div>
+    <div class="st-card"><h3 id="rkChrTtl">名前(苗字を除く)に使われている文字ランキング</h3><div class="st-scroll" id="rkChr"></div></div>
   </section>
 </div>
 <footer>© SE CHARACTERS</footer>
@@ -737,19 +751,90 @@ function renderStats(){
     svg += `<text x="${L+pw/2}" y="${H-6}" text-anchor="middle" font-size="12" fill="#888">${esc(M[1])}${unit?" ("+unit+")":""} ※区間の下限値</text></svg>`;
     $("#stHist").innerHTML = `<div class="hist">${svg}<div class="lg">${G.names.map(g=>`<div><i style="background:${G.color[g]}"></i>${esc(g)}</div>`).join("")}</div></div>`;
   }
-  // 統計テーブル
+  // 統計テーブル(ソート可)
   $("#stTblTtl").textContent = `グループ別 ${M[1]} の統計`;
-  const row = (g, arr) => arr.length ? `<tr><td>${esc(g)}</td><td>${arr.length}</td><td>${f1(mean(arr))}</td><td>${f1(median(arr))}</td><td>${f1(Math.min.apply(null,arr))}</td><td>${f1(Math.max.apply(null,arr))}</td></tr>` : `<tr><td>${esc(g)}</td><td>0</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>`;
-  $("#stTbl").innerHTML = `<table class="tb"><thead><tr><th>グループ</th><th>データ数</th><th>平均</th><th>中央値</th><th>最小</th><th>最大</th></tr></thead><tbody>${G.names.map(g=>row(g,per[g])).join("")}${row("全体",all)}</tbody></table>`;
-  // 平均一覧マトリクス
+  const sRow = (g, arr, pin) => ({pinned:pin, c:{g:g, n:arr.length, avg:arr.length?mean(arr):null, med:arr.length?median(arr):null, min:arr.length?Math.min.apply(null,arr):null, max:arr.length?Math.max.apply(null,arr):null}});
+  drawTable("stTbl", [
+    {k:"g",label:"グループ",text:true},{k:"n",label:"データ数"},{k:"avg",label:"平均",f:f1},{k:"med",label:"中央値",f:f1},{k:"min",label:"最小",f:f1},{k:"max",label:"最大",f:f1}
+  ], G.names.map(g=>sRow(g,per[g])).concat([sRow("全体",all,true)]));
+  // 平均一覧マトリクス(ソート可)
   const keys = METRICS.map(x=>x[0]), mat = {};
   G.names.forEach(g=>{ mat[g] = {}; keys.forEach(k=>mat[g][k]=[]); });
   ALL.forEach(m=>{ const g = gOf(m); keys.forEach(k=>{ const v = num(m[k]); if(v!==null) mat[g][k].push(v); }); });
-  const mx = {}; keys.forEach(k=>{ let best=-Infinity; G.names.forEach(g=>{ if(mat[g][k].length){ best = Math.max(best, mean(mat[g][k])); } }); mx[k]=best; });
-  $("#stMatrix").innerHTML = `<table class="tb"><thead><tr><th>グループ</th><th>人数</th>${METRICS.map(x=>`<th>${x[1]}</th>`).join("")}</tr></thead><tbody>`
-    + G.names.map(g=>`<tr><td>${esc(g)}</td><td>${cnt[g]}</td>${keys.map(k=>{ const a=mat[g][k]; if(!a.length) return "<td>—</td>"; const v=mean(a); return `<td class="${v===mx[k]?"mx":""}">${k==="birthYear"?f1(v):(k==="height"||k==="weight")?f1(v):Math.round(v).toLocaleString()}</td>`; }).join("")}</tr>`).join("")
-    + `<tr><td>全体</td><td>${ALL.length}</td>${keys.map(k=>{ const a = ALL.map(m=>num(m[k])).filter(v=>v!==null); return a.length ? `<td>${k==="birthYear"||k==="height"||k==="weight"?f1(mean(a)):Math.round(mean(a)).toLocaleString()}</td>` : "<td>—</td>"; }).join("")}</tr></tbody></table>`;
+  const dec = k => k==="birthYear"||k==="height"||k==="weight";
+  const mRow = (g, get, n, pin) => { const c = {g:g, n:n}; keys.forEach(k=>{ const a = get(k); c[k] = a.length ? mean(a) : null; }); return {pinned:pin, c:c}; };
+  const allArr = k => ALL.map(m=>num(m[k])).filter(v=>v!==null);
+  drawTable("stMatrix", [{k:"g",label:"グループ",text:true},{k:"n",label:"人数"}].concat(METRICS.map(x=>({k:x[0],label:x[1],f:dec(x[0])?f1:(v=>Math.round(v).toLocaleString()),hi:true}))),
+    G.names.map(g=>mRow(g, k=>mat[g][k], cnt[g])).concat([mRow("全体", allArr, ALL.length, true)]));
+  renderRanking(G);
 }
+
+/* ---- ソート可能な表 ---- */
+const tblState = {}, tblData = {};
+function drawTable(id, cols, rows, opt){
+  tblData[id] = {cols, rows, opt: opt||{}};
+  const st = tblState[id] = tblState[id] || {k:null, dir:-1};
+  const box = $("#"+id), d = tblData[id];
+  const sorted = d.rows.filter(r=>!r.pinned), pinned = d.rows.filter(r=>r.pinned);
+  if(st.k){
+    const col = cols.find(c=>c.k===st.k);
+    if(col) sorted.sort((a,b)=>{
+      const x = a.c[st.k], y = b.c[st.k];
+      if(x===null||x===undefined) return (y===null||y===undefined) ? 0 : 1;
+      if(y===null||y===undefined) return -1;
+      const r = col.text ? String(x).localeCompare(String(y),"ja") : x - y;
+      return r * st.dir || (a.c.rank||0)-(b.c.rank||0);
+    });
+  }
+  const hi = {}; cols.forEach(c=>{ if(c.hi){ let best=-Infinity; d.rows.forEach(r=>{ if(!r.pinned && r.c[c.k]!==null) best = Math.max(best, r.c[c.k]); }); hi[c.k]=best; } });
+  const lim = d.opt.limit, expanded = tblState[id].exp, show = (lim && !expanded) ? sorted.slice(0, lim) : sorted;
+  const cell = (c, r) => { const v = r.c[c.k]; if(v===null||v===undefined) return `<td>—</td>`;
+    const cls = [c.cls||"", c.hi && v===hi[c.k] ? "mx" : ""].join(" ").trim();
+    return `<td class="${cls}">${c.text||c.raw ? (c.raw ? v : esc(v)) : (c.f ? c.f(v) : Math.round(v).toLocaleString())}</td>`; };
+  box.innerHTML = `<table class="tb"><thead><tr>${cols.map(c=>{ const on = st.k===c.k; return c.nosort ? `<th>${c.label}</th>` : `<th class="sortable ${on?"sorted":""}" data-sk="${c.k}">${c.label}<span class="ar">${on?(st.dir<0?"▼":"▲"):""}</span></th>`; }).join("")}</tr></thead><tbody>`
+    + show.concat(pinned).map(r=>`<tr>${cols.map(c=>cell(c,r)).join("")}</tr>`).join("") + `</tbody></table>`
+    + (lim && sorted.length>lim ? `<button class="more-btn" data-more="${id}">${expanded?"上位"+lim+"件だけ表示":"すべて表示 ("+sorted.length.toLocaleString()+"件)"}</button>` : "");
+}
+document.addEventListener("click", e=>{
+  const th = e.target.closest("th[data-sk]"), mb = e.target.closest("[data-more]");
+  if(th){ const box = th.closest("[id]"); const id = box.id, st = tblState[id], k = th.dataset.sk, col = tblData[id].cols.find(c=>c.k===k);
+    if(st.k===k) st.dir = -st.dir; else { st.k = k; st.dir = col && col.text ? 1 : -1; }
+    drawTable(id, tblData[id].cols, tblData[id].rows, tblData[id].opt); return; }
+  if(mb){ const id = mb.dataset.more; tblState[id].exp = !tblState[id].exp; drawTable(id, tblData[id].cols, tblData[id].rows, tblData[id].opt); }
+});
+
+/* ---- 苗字・文字ランキング ---- */
+const CH_RE = (() => { try{ return {han:new RegExp("\\p{Script=Han}|[々〆ヶ]","u")}; }catch(e){ return {han:/[一-鿿㐀-䶿々〆ヶ]/}; } })();
+function charKind(c){ if(CH_RE.han.test(c)) return "han"; if(/[ぁ-ゟ]/.test(c)) return "hira"; if(/[゠-ヿㇰ-ㇿ]/.test(c)) return "kata"; return "other"; }
+function splitName(n){ const p = String(n||"").trim().split(/[\s　]+/).filter(Boolean); return p.length>=2 ? {sur:p[0], given:p.slice(1).join("")} : {sur:"", given:p[0]||""}; }
+function rankify(arr, key){ arr.sort((a,b)=>b[key]-a[key] || String(a.name||a.ch).localeCompare(String(b.name||b.ch),"ja")); let prev = null, r = 0; arr.forEach((x,i)=>{ if(x[key]!==prev){ r = i+1; prev = x[key]; } x.rank = r; }); return arr; }
+function renderRanking(G){
+  const sc = $("#rkScope"), cur = sc.value;
+  const gs = ["", ...G.names];
+  if(sc.dataset.by !== $("#stBy").value || sc.options.length !== gs.length){ sc.innerHTML = gs.map(g=>`<option value="${esc(g)}">${g?esc(g):"全員"}</option>`).join(""); sc.dataset.by = $("#stBy").value; sc.value = gs.includes(cur)?cur:""; }
+  const scope = sc.value, kind = $("#rkKind").value;
+  const list = ALL.filter(m=>!scope || G.label(m)===scope);
+  // 苗字
+  const sur = {}, withSur = list.filter(m=>splitName(m.name).sur);
+  withSur.forEach(m=>{ const k = splitName(m.name).sur; (sur[k] = sur[k] || []).push(m); });
+  const surRows = rankify(Object.keys(sur).map(k=>({name:k, n:sur[k].length, mem:sur[k]})), "n");
+  $("#rkSurTtl").textContent = `苗字ランキング(${surRows.length.toLocaleString()}種類 / ${withSur.length.toLocaleString()}人)`;
+  drawTable("rkSur", [
+    {k:"rank",label:"順位",cls:""},{k:"name",label:"苗字",text:true,cls:"ch"},{k:"n",label:"人数"},{k:"pct",label:"割合",f:v=>v.toFixed(1)+"%"},
+    {k:"mem",label:"メンバー",text:true,cls:"txt",nosort:true}
+  ], surRows.map(r=>({c:{rank:r.rank, name:r.name, n:r.n, pct:r.n/withSur.length*100, mem:r.mem.slice(0,4).map(m=>splitName(m.name).given).join("、")+(r.mem.length>4?` ほか${r.mem.length-4}人`:"")}})), {limit:30});
+  // 文字
+  const ch = {};
+  list.forEach(m=>{ const p = splitName(m.name), seen = {};
+    [["given",p.given]].forEach(([pos,str])=>{ for(const c of str){ if(kind && charKind(c)!==kind) continue; const o = ch[c] = ch[c] || {ch:c, total:0, people:0, sur:0, given:0, _p:null}; o.total++; o[pos]++; if(o._p!==m){ o._p = m; o.people++; } } }); });
+  const chRows = rankify(Object.keys(ch).map(k=>ch[k]), "total");
+  const totalChars = chRows.reduce((a,x)=>a+x.total,0);
+  $("#rkChrTtl").textContent = `名前(苗字を除く)に使われている文字ランキング(${chRows.length.toLocaleString()}種類 / のべ${totalChars.toLocaleString()}文字)`;
+  drawTable("rkChr", [
+    {k:"rank",label:"順位"},{k:"ch",label:"文字",text:true,cls:"ch"},{k:"total",label:"使用回数"},{k:"pct",label:"割合",f:v=>v.toFixed(2)+"%"},{k:"people",label:"使用人数"}
+  ], chRows.map(r=>({c:{rank:r.rank, ch:r.ch, total:r.total, pct:r.total/totalChars*100, people:r.people}})), {limit:50});
+}
+["rkScope","rkKind"].forEach(id=>$("#"+id).addEventListener("input", renderStats));
 ["stBy","stMetric","stMode"].forEach(id=>$("#"+id).addEventListener("input", renderStats));
 $("#mainNav").addEventListener("click", e=>{ const b=e.target.closest(".mn"); if(b) showView(b.dataset.v); });
 document.addEventListener("visibilitychange", ()=>{ if(!document.hidden && !$("#viewBd").hidden) renderBirthday(); });
